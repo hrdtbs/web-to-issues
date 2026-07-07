@@ -546,6 +546,7 @@
 }
 
 .wti-annotation-stage {
+  position: relative;
   min-height: 240px;
   max-height: min(58vh, 620px);
   padding: 18px;
@@ -556,6 +557,23 @@
   align-items: center;
   justify-content: center;
   overflow: auto;
+}
+
+.wti-text-input {
+  position: absolute;
+  min-width: 120px;
+  max-width: min(280px, 80%);
+  padding: 2px 6px;
+  margin: 0;
+  border: 2px solid var(--wti-primary);
+  border-radius: var(--wti-radius-sm);
+  background: rgba(255, 255, 255, 0.95);
+  color: #ff0000;
+  font-weight: 600;
+  font-family: system-ui, -apple-system, sans-serif;
+  outline: none;
+  z-index: 1;
+  box-shadow: var(--wti-shadow-sm);
 }
 
 .wti-annotation-stage canvas {

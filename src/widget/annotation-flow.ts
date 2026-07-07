@@ -46,6 +46,7 @@ export function showAnnotationStep(
           <button class="wti-tool active" data-tool="draw">Draw</button>
           <button class="wti-tool" data-tool="arrow">Arrow</button>
           <button class="wti-tool" data-tool="rect">Rectangle</button>
+          <button class="wti-tool" data-tool="text">Text</button>
           <button class="wti-tool" data-tool="redact">Redact</button>
           <button class="wti-tool" data-action="undo">Undo</button>
         </div>

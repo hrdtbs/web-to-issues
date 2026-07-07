@@ -1,4 +1,4 @@
-export type Tool = 'draw' | 'arrow' | 'rect' | 'redact';
+export type Tool = 'draw' | 'arrow' | 'rect' | 'redact' | 'text';
 
 interface Point {
   x: number;
@@ -30,6 +30,7 @@ export function createAnnotator(
   let points: Point[] = [];
   let draftBase: ImageData | null = null;
   let hasDrawnStroke = false;
+  let activeTextInput: HTMLInputElement | null = null;
   const history: ImageData[] = [];
 
   // Load image
@@ -96,6 +97,82 @@ export function createAnnotator(
     const rect = canvas.getBoundingClientRect();
     const scale = Math.max(canvas.width / rect.width, canvas.height / rect.height, 1);
     return Math.round(VISIBLE_ANNOTATION_LINE_WIDTH * scale);
+  }
+
+  function getFontSize() {
+    return Math.round(getLineWidth() * 3);
+  }
+
+  function getDisplayPoint(point: Point) {
+    const rect = canvas.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    return {
+      left: rect.left - containerRect.left + (point.x / canvas.width) * rect.width,
+      top: rect.top - containerRect.top + (point.y / canvas.height) * rect.height,
+    };
+  }
+
+  function drawText(point: Point, text: string) {
+    const fontSize = getFontSize();
+    ctx.font = `600 ${fontSize}px system-ui, -apple-system, sans-serif`;
+    ctx.fillStyle = ANNOTATION_COLOR;
+    ctx.textBaseline = 'top';
+    ctx.fillText(text, point.x, point.y);
+  }
+
+  function removeTextInput(commit: boolean) {
+    if (!activeTextInput) return;
+
+    const input = activeTextInput;
+    const pointData = input.dataset.point;
+    activeTextInput = null;
+
+    if (commit && pointData) {
+      const text = input.value.trim();
+      if (text) {
+        drawText(JSON.parse(pointData) as Point, text);
+        commitState();
+      }
+    }
+
+    input.remove();
+  }
+
+  function showTextInput(point: Point) {
+    removeTextInput(true);
+
+    const { left, top } = getDisplayPoint(point);
+    const rect = canvas.getBoundingClientRect();
+    const displayFontSize = getFontSize() * (rect.width / canvas.width);
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'wti-text-input';
+    input.style.left = `${left}px`;
+    input.style.top = `${top}px`;
+    input.style.fontSize = `${displayFontSize}px`;
+    input.dataset.point = JSON.stringify(point);
+    input.placeholder = 'Type here…';
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        removeTextInput(true);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        removeTextInput(false);
+      }
+    });
+
+    input.addEventListener('blur', () => {
+      window.setTimeout(() => {
+        if (activeTextInput === input) removeTextInput(true);
+      }, 0);
+    });
+
+    container.appendChild(input);
+    activeTextInput = input;
+    input.focus();
   }
 
   function drawLine(from: Point, to: Point) {
@@ -179,6 +256,11 @@ export function createAnnotator(
     const base = getLatestState();
     if (!base) return;
 
+    if (currentTool === 'text') {
+      showTextInput(getCanvasPoint(e));
+      return;
+    }
+
     isDrawing = true;
     points = [getCanvasPoint(e)];
     draftBase = base;
@@ -252,11 +334,18 @@ export function createAnnotator(
 
   return {
     setTool(tool: Tool) {
+      removeTextInput(false);
       cancelDraft();
       currentTool = tool;
+      canvas.style.cursor = tool === 'text' ? 'text' : 'crosshair';
     },
 
     undo() {
+      if (activeTextInput) {
+        removeTextInput(false);
+        return;
+      }
+
       if (draftBase) {
         cancelDraft();
         return;
@@ -275,6 +364,7 @@ export function createAnnotator(
     },
 
     destroy() {
+      removeTextInput(false);
       resetDraft();
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('mousemove', handleMouseMove);
