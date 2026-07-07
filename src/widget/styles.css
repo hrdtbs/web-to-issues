@@ -62,8 +62,9 @@
   position: fixed;
   bottom: 20px;
   right: 0;
-  height: 44px;
-  padding: 0 16px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
   border-radius: calc(var(--radius) * 2) 0 0 calc(var(--radius) * 2);
   border: none;
   background: var(--wti-primary);
@@ -74,9 +75,13 @@
   transition: transform var(--wti-transition), box-shadow var(--wti-transition);
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
+  justify-content: center;
+}
+
+.wti-trigger-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 .wti-trigger:hover {
@@ -594,8 +599,13 @@
 @media (max-width: 640px) {
   .wti-trigger {
     bottom: 16px;
-    height: 40px;
-    font-size: 13px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .wti-trigger-icon {
+    width: 18px;
+    height: 18px;
   }
 
   .wti-overlay {
